@@ -3,7 +3,6 @@ import { Buffer } from "./buffer.ts";
 import { Component, Route } from "./router.ts";
 
 export class DenopsApp {
-  #appName: string;
   #routes: {
     pathRegexp: RegExp;
     component: Component;
@@ -14,8 +13,7 @@ export class DenopsApp {
     path: string;
   }[];
 
-  constructor(appName: string, denops: Denops) {
-    this.#appName = appName;
+  constructor(denops: Denops) {
     this.#routes = [];
     this.#denops = denops;
     this.#commands = [];
@@ -69,11 +67,11 @@ export class DenopsApp {
 
     await group(
       this.#denops,
-      `${this.#appName}-buffer`,
+      `${this.#denops.name}-buffer`,
       (helper: GroupHelper) => {
         helper.define(
           "BufReadCmd",
-          `denopsapp://${this.#appName}/*`,
+          `denopsapp://${this.#denops.name}/*`,
           `call denops#notify('${this.#denops.name}', 'renderContents', [expand('<amatch>')])`,
         );
       },
