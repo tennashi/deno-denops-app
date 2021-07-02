@@ -13,7 +13,6 @@ const items = [
 ]
 
 const listHoge = (_params: PathParams): Promise<Buffer> => {
-  console.log("hoge");
   const list = new ListWidget<{ id: number, hoge: string }>();
   items.forEach((item) => { 
     list.setItem(item, (item: { id: number, hoge: string}): string => item.hoge);

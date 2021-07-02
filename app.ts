@@ -26,7 +26,6 @@ export class DenopsApp {
       ),
       component: route.component,
     }));
-    console.log(this.#routes);
   }
 
   addCommand(name: string, path: string) {
