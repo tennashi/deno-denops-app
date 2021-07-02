@@ -1,8 +1,8 @@
 import { Buffer } from "./buffer.ts";
 
-export type Context = { [key: string]: string };
+export type PathParams = { [key: string]: string };
 
-export type Component = (context: Context) => Promise<Buffer>;
+export type Component = (params: PathParams) => Promise<Buffer>;
 
 interface Route {
   path: string;
