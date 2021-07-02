@@ -4,7 +4,9 @@ export type Context = { [key: string]: string };
 
 export type Component = (context: Context) => Promise<Buffer>;
 
-export interface Route {
+interface Route {
   path: string;
   component: Component;
 }
+
+export type { Route };
