@@ -11,7 +11,7 @@ import {
   PathParams,
   Route,
   TextWidget,
-} from "https://deno.land/x/denops_app@v0.0.3/mod.ts";
+} from "https://deno.land/x/denops_app@v0.0.5/mod.ts";
 
 const items = [
   { id: 1, hoge: "hoge" },
