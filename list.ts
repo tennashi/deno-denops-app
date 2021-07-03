@@ -31,21 +31,22 @@ export class ListWidget<T> implements Buffer {
       this.#items.map((item) => item.renderFn(item.item)),
     );
 
-    Object.keys(this.#keybinds).forEach(async (key) => {
-      denops.dispatcher[`keyHandler`] = async (
-        index: unknown,
-      ): Promise<void> => {
-        await this.#keybinds[key](
-          denops,
-          this.#items[(index as number)].item,
-        );
-      };
+    denops.dispatcher[`keyHandler`] = async (
+      key: unknown,
+      index: unknown,
+    ): Promise<void> => {
+      await this.#keybinds[key as string](
+        denops,
+        this.#items[index as number].item,
+      );
+    };
 
+    Object.keys(this.#keybinds).forEach(async (key) => {
       await execute(
         denops,
-        [
-          `nmap <buffer> <expr> ${key} denops#notify('${denops.name}', 'keyHandler', [line('.') - 1])`,
-        ],
+        `nmap <buffer><expr> ${key} denops#notify('${denops.name}', 'keyHandler', ['${
+          key.replaceAll("<", "<lt>")
+        }', string(line('.') - 1)])`,
       );
     });
 
