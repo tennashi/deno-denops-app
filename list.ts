@@ -1,9 +1,10 @@
-import { Denops, execute } from "./deps.ts";
+import { Denops, execute, diff } from "./deps.ts";
 import { Buffer } from "./buffer.ts";
 
 export class ListWidget<T> implements Buffer {
   #renderFn: (item: T) => string;
   #items: T[];
+  #renderdItems: T[];
 
   #keybinds: {
     [key: string]: (denops: Denops, item: T) => Promise<void>;
@@ -11,6 +12,7 @@ export class ListWidget<T> implements Buffer {
 
   constructor(renderFn: (item: T) => string) {
     this.#items = [];
+    this.#renderdItems = [];
     this.#renderFn = renderFn;
     this.#keybinds = {};
   }
@@ -28,11 +30,33 @@ export class ListWidget<T> implements Buffer {
   }
 
   async render(denops: Denops) {
-    await denops.call(
-      "setline",
-      1,
-      this.#items.map((item) => item.renderFn(item.item)),
+    await execute(
+      denops,
+      [
+        `setlocal modifiable`,
+      ],
     );
+
+    const renderd = this.#renderdItems.map(this.#renderFn)
+    const willRender = this.#items.map(this.#renderFn)
+    const ops = diff(renderd, willRender);
+
+    let lnum = 0;
+    ops.forEach((op) => {
+      switch (op.type) {
+      case "removed":
+        execute(denops, `call deletebufline('%', ${lnum})`);
+        break;
+      case "added":
+        execute(denops, `call appendbufline('%', ${lnum}, '${op.value}')`)
+        lnum++;
+        break;
+      default:
+        lnum++;
+      }
+    });
+
+    this.#renderdItems = this.#items.slice();
 
     denops.dispatcher[`keyHandler`] = async (
       key: unknown,
