@@ -15,6 +15,10 @@ export class ListWidget<T> implements Buffer {
     this.#keybinds = {};
   }
 
+  setItems(items: T[]) {
+    this.#items = items;
+  }
+
   addItem(item: T) {
     this.#items.push(item);
   }
