@@ -5,6 +5,7 @@ export class ListWidget<T> implements Buffer {
   #renderFn: (item: T) => string;
   #items: T[];
   #renderdItems: T[];
+  #firstRenderd: boolean;
 
   #keybinds: {
     [key: string]: (denops: Denops, item: T) => Promise<void>;
@@ -15,6 +16,7 @@ export class ListWidget<T> implements Buffer {
     this.#renderdItems = [];
     this.#renderFn = renderFn;
     this.#keybinds = {};
+    this.#firstRenderd = false;
   }
 
   setItems(items: T[]) {
@@ -37,24 +39,29 @@ export class ListWidget<T> implements Buffer {
       ],
     );
 
-    const renderd = this.#renderdItems.map(this.#renderFn)
-    const willRender = this.#items.map(this.#renderFn)
-    const ops = diff(renderd, willRender);
+    if (!this.#firstRenderd) {
+      await denops.call('setline', 1, this.#items.map(this.#renderFn));
+      this.#firstRenderd = true;
+    } else {
+      const renderd = this.#renderdItems.map(this.#renderFn)
+      const willRender = this.#items.map(this.#renderFn)
+      const ops = diff(renderd, willRender);
 
-    let lnum = 0;
-    ops.forEach((op) => {
-      switch (op.type) {
-      case "removed":
-        execute(denops, `call deletebufline('%', ${lnum})`);
-        break;
-      case "added":
-        execute(denops, `call appendbufline('%', ${lnum}, '${op.value}')`)
-        lnum++;
-        break;
-      default:
-        lnum++;
-      }
-    });
+      let lnum = 1;
+      ops.forEach((op) => {
+        switch (op.type) {
+        case "removed":
+          execute(denops, `call deletebufline('%', ${lnum})`);
+          break;
+        case "added":
+          execute(denops, `call appendbufline('%', ${lnum - 1}, '${op.value}')`)
+          lnum++;
+          break;
+        default:
+          lnum++;
+        }
+      });
+    }
 
     this.#renderdItems = this.#items.slice();
 
