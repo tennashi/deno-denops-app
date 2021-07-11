@@ -2,22 +2,21 @@ import { Denops, execute } from "./deps.ts";
 import { Buffer } from "./buffer.ts";
 
 export class ListWidget<T> implements Buffer {
-  #items: {
-    item: T;
-    renderFn: (item: T) => string;
-  }[];
+  #renderFn: (item: T) => string;
+  #items: T[];
 
   #keybinds: {
     [key: string]: (denops: Denops, item: T) => Promise<void>;
   };
 
-  constructor() {
+  constructor(renderFn: (item: T) => string) {
     this.#items = [];
+    this.#renderFn = renderFn;
     this.#keybinds = {};
   }
 
-  setItem(item: T, renderFn: (item: T) => string) {
-    this.#items.push({ item, renderFn });
+  addItem(item: T) {
+    this.#items.push(item);
   }
 
   handleKey(key: string, handler: (denops: Denops, item: T) => Promise<void>) {
@@ -37,7 +36,7 @@ export class ListWidget<T> implements Buffer {
     ): Promise<void> => {
       await this.#keybinds[key as string](
         denops,
-        this.#items[index as number].item,
+        this.#items[index as number],
       );
     };
 
