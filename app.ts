@@ -1,5 +1,5 @@
 import { Denops, execute, group, GroupHelper } from "./deps.ts";
-import { Buffer } from "./buffer.ts";
+import { ContentsConstructor, VimBuffer } from "./buffer.ts";
 import { Component, Route } from "./router.ts";
 
 export class DenopsApp {
@@ -32,7 +32,7 @@ export class DenopsApp {
     this.#commands.push({ name: name, path: path });
   }
 
-  matchRoute(path: string): Promise<Buffer> {
+  private matchRoute(path: string): Promise<ContentsConstructor> {
     for (const route of this.#routes) {
       const matched = path.match(route.pathRegexp);
 
@@ -50,10 +50,12 @@ export class DenopsApp {
   async initialize() {
     this.#denops.dispatcher = {
       renderContents: async (path: unknown): Promise<void> => {
-        const buffer = await this.matchRoute(
+        const constructor = await this.matchRoute(
           (path as string).substring(`denopsapp://${this.#denops.name}`.length),
         );
-        await buffer.render(this.#denops);
+        const buffer = new VimBuffer(this.#denops);
+        buffer.setKeybindInitializer(constructor.setKeybinds.bind(constructor));
+        await buffer.renderContents(constructor.contents());
       },
     };
 
