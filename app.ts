@@ -49,6 +49,7 @@ export class DenopsApp {
 
   async initialize() {
     this.#denops.dispatcher = {
+      ...this.#denops.dispatcher,
       renderContents: async (path: unknown): Promise<void> => {
         const constructor = await this.matchRoute(
           (path as string).substring(`denopsapp://${this.#denops.name}`.length),
