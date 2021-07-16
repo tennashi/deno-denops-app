@@ -1,22 +1,17 @@
-import { Denops, execute, diff } from "./deps.ts";
-import { Buffer } from "./buffer.ts";
+import { Denops, execute } from "./deps.ts";
+import { ContentsConstructor } from "./buffer.ts";
 
-export class ListWidget<T> implements Buffer {
+export class ListWidget<T> implements ContentsConstructor {
   #renderFn: (item: T) => string;
   #items: T[];
-  #renderdItems: T[];
-  #firstRenderd: boolean;
-
   #keybinds: {
     [key: string]: (denops: Denops, item: T) => Promise<void>;
   };
 
   constructor(renderFn: (item: T) => string) {
     this.#items = [];
-    this.#renderdItems = [];
     this.#renderFn = renderFn;
     this.#keybinds = {};
-    this.#firstRenderd = false;
   }
 
   setItems(items: T[]) {
@@ -31,41 +26,8 @@ export class ListWidget<T> implements Buffer {
     this.#keybinds[key] = handler;
   }
 
-  async render(denops: Denops) {
-    await execute(
-      denops,
-      [
-        `setlocal modifiable`,
-      ],
-    );
-
-    if (!this.#firstRenderd) {
-      await denops.call('setline', 1, this.#items.map(this.#renderFn));
-      this.#firstRenderd = true;
-    } else {
-      const renderd = this.#renderdItems.map(this.#renderFn)
-      const willRender = this.#items.map(this.#renderFn)
-      const ops = diff(renderd, willRender);
-
-      let lnum = 1;
-      ops.forEach((op) => {
-        switch (op.type) {
-        case "removed":
-          execute(denops, `call deletebufline('%', ${lnum})`);
-          break;
-        case "added":
-          execute(denops, `call appendbufline('%', ${lnum - 1}, '${op.value}')`)
-          lnum++;
-          break;
-        default:
-          lnum++;
-        }
-      });
-    }
-
-    this.#renderdItems = this.#items.slice();
-
-    denops.dispatcher[`keyHandler`] = async (
+  async setKeybinds(denops: Denops) {
+    denops.dispatcher["keyHandler"] = async (
       key: unknown,
       index: unknown,
     ): Promise<void> => {
@@ -74,8 +36,7 @@ export class ListWidget<T> implements Buffer {
         this.#items[index as number],
       );
     };
-
-    Object.keys(this.#keybinds).forEach(async (key) => {
+    await Object.keys(this.#keybinds).forEach(async (key) => {
       await execute(
         denops,
         `nmap <buffer><expr> ${key} denops#notify('${denops.name}', 'keyHandler', ['${
@@ -83,17 +44,9 @@ export class ListWidget<T> implements Buffer {
         }', string(line('.') - 1)])`,
       );
     });
+  }
 
-    await execute(
-      denops,
-      [
-        `setlocal bufhidden=hide`,
-        `setlocal buftype=nofile`,
-        `setlocal nobuckup`,
-        `setlocal noswapfile`,
-        `setlocal nomodified`,
-        `setlocal nomodifiable`,
-      ],
-    );
+  contents(): string[] {
+    return this.#items.map(this.#renderFn);
   }
 }
