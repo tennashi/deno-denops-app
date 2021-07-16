@@ -4,6 +4,11 @@ interface Buffer {
   render: (denops: Denops) => Promise<void>;
 }
 
+export interface ContentsConstructor {
+  setKeybinds: (denops: Denops) => Promise<void>;
+  contents: () => string[];
+}
+
 export class VimBuffer {
   #denops: Denops;
   #currentContents: string[];
