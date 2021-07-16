@@ -1,7 +1,7 @@
-import { Denops, execute } from "./deps.ts";
-import { Buffer } from "./buffer.ts";
+import { Denops } from "./deps.ts";
+import { ContentsConstructor } from "./buffer.ts";
 
-export class TextWidget implements Buffer {
+export class TextWidget implements ContentsConstructor {
   #content: string;
   constructor() {
     this.#content = "";
@@ -11,23 +11,9 @@ export class TextWidget implements Buffer {
     this.#content = content;
   }
 
-  async render(denops: Denops) {
-    await denops.call(
-      "setline",
-      1,
-      this.#content.split(/\r?\n/g),
-    );
+  async setKeybinds(_: Denops) {}
 
-    await execute(
-      denops,
-      [
-        `setlocal bufhidden=hide`,
-        `setlocal buftype=nofile`,
-        `setlocal nobuckup`,
-        `setlocal noswapfile`,
-        `setlocal nomodified`,
-        `setlocal nomodifiable`,
-      ],
-    );
+  contents(): string[] {
+    return this.#content.split(/\r?\n/g);
   }
 }
