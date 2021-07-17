@@ -1,9 +1,5 @@
 import { Denops, diff, execute } from "./deps.ts";
 
-interface Buffer {
-  render: (denops: Denops) => Promise<void>;
-}
-
 export interface ContentsConstructor {
   setKeybinds: (denops: Denops) => Promise<void>;
   contents: () => string[];
@@ -81,5 +77,3 @@ export class VimBuffer {
     await this.#denops.cmd(`setlocal nomodifiable`);
   }
 }
-
-export type { Buffer };
